@@ -21,8 +21,8 @@ def conv_norm(x, filters, kernel_size=3, strides=1, activation=tf.nn.relu,
     return x
 
 
-def BasicBlock(inp, filters, strides=1, activation=tf.nn.relu, conv_shortcut=False,
-               dp_rate=0, make_model=False, idx=1):
+def BasicBlock(inp, filters, strides=1, activation=tf.nn.relu, dp_rate=0,
+               make_model=False, suffix=1, *args, **kwargs):
 
     if make_model:                  # to group block layers into a model (just ignore)
         svd_inp = inp
@@ -40,7 +40,7 @@ def BasicBlock(inp, filters, strides=1, activation=tf.nn.relu, conv_shortcut=Fal
         residual = inp
 
     x = conv_norm(x, filters, kernel_size=3, activation=activation, strides=strides)
-    x = conv_norm(x, filters, kernel_size=3, activation=activation, do_norm_act=False) # expand
+    x = conv_norm(x, filters, kernel_size=3, activation=activation, do_norm_act=False)
 
     if dp_rate:
         x = layers.Dropout(dp_rate)(x)
@@ -48,14 +48,14 @@ def BasicBlock(inp, filters, strides=1, activation=tf.nn.relu, conv_shortcut=Fal
     x = layers.Add()([residual, x])
 
     if make_model:                  #  (just ignore)
-        m = tf.keras.Model(inputs=inp, outputs=x, name=f"BasicBlock_{idx}")
+        m = tf.keras.Model(inputs=inp, outputs=x, name=f"BasicBlock_{suffix}")
         return m(svd_inp)
     else:
         return x
 
 
-def Bottleneck(inp, filters, strides=1, activation=tf.nn.relu, conv_shortcut=False,
-               expansion=4, dp_rate=0, make_model=False, idx=1):
+def Bottleneck(inp, filters, strides=1, activation=tf.nn.relu, expansion=4,
+               dp_rate=0, make_model=False, suffix=1, *args, **kwargs):
 
     if make_model:                  # to group block layers into a model (just ignore)
         svd_inp = inp
@@ -83,7 +83,7 @@ def Bottleneck(inp, filters, strides=1, activation=tf.nn.relu, conv_shortcut=Fal
     x = layers.Add()([residual, x])
 
     if make_model:                  #  (just ignore)
-        m = tf.keras.Model(inputs=inp, outputs=x, name=f"Bottleneck_{idx}")
+        m = tf.keras.Model(inputs=inp, outputs=x, name=f"Bottleneck_{suffix}")
         return m(svd_inp)
     else:
         return x
