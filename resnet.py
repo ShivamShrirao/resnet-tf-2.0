@@ -1,7 +1,7 @@
 import tensorflow as tf
 import tensorflow.keras.layers as layers
 
-from resblock import norm_act, conv_norm, BasicBlock, Bottleneck
+from resblock import norm_act, conv_norm, BasicBlock, Bottleneck, AttnBottleneck
 
 # https://github.com/tensorflow/tensorflow/blob/v2.4.1/tensorflow/python/keras/applications/resnet.py
 
@@ -25,8 +25,11 @@ class Resnet():
         self.filters_per_stack = filters_per_stack
         self.num_repeats = num_repeats
         self.strides = strides
+
+    def get_model(self):
         o = self.build_model()
         self.model = tf.keras.Model(inputs=self.inputs, outputs=o)
+        return self.model
 
     def build_model(self, include_top=True):
         x = self.inputs
@@ -58,9 +61,6 @@ class Resnet():
                        expansion=self.expansion, dp_rate=dp_rate, make_model=False,
                        suffix=f"{suffix}_block{i}")
         return x
-
-    def preprocess_input(self):
-        raise NotImplementedError
 
 
 def RESNEXT():
