@@ -7,9 +7,9 @@ from resblock import norm_act, conv_norm, BasicBlock, Bottleneck
 
 
 class Resnet():
-    def __init__(self, block, filters_per_stack=[64, 128, 256, 512], num_repeats=[3,4,6,3], strides=[1,2,2,2],
+    def __init__(self, block, filters_per_stack=[64, 128, 256, 512], num_repeats=[3,4,6,3], strides=[2,2,2,1],
                  expansion=4, dp_rate=0, activation=tf.nn.relu, inputs=None, input_shape=(224, 224, 3),
-                 num_classes=1024):
+                 num_classes=1000):
         self.block = block
         self.dp_rate = dp_rate
         self.activation = activation
@@ -26,13 +26,13 @@ class Resnet():
         self.num_repeats = num_repeats
         self.strides = strides
         o = self.build_model()
-        model = tf.keras.Model(inputs=self.inputs, outputs=o)
+        self.model = tf.keras.Model(inputs=self.inputs, outputs=o)
 
     def build_model(self, include_top=True):
         x = self.inputs
         # stem
         x = conv_norm(x, 64, kernel_size=7, strides=2, activation=self.activation, do_norm_act=False)
-        x = layers.MaxPooling2D(3, strides=2)(x)
+        x = layers.MaxPool2D(2, strides=2, data_format="channels_first")(x)
 
         # body
         for i in range(len(self.filters_per_stack)):
@@ -43,20 +43,20 @@ class Resnet():
         if not include_top:
             return x
         else:
-            x = layers.GlobalAveragePooling2D()(x)
+            x = layers.GlobalAveragePooling2D(data_format="channels_first")(x)
             x = layers.Dense(self.num_classes)(x)
             x = layers.Softmax(axis=-1)(x)
             return x
 
     def stack(self, x, block, filters, stride1=2, dp_rate=0, repeat=3, suffix=1):
-        i = 0
-        x = block(x, filters, strides=stride1, activation=self.activation, 
-                       expansion=self.expansion, dp_rate=dp_rate, make_model=False,
-                       suffix=f"{suffix}_{i}")
-        for i in range(1, repeat-1):
+        for i in range(repeat-1):
             x = block(x, filters, strides=1, activation=self.activation, 
                        expansion=self.expansion, dp_rate=dp_rate, make_model=False,
-                       suffix=f"{suffix}_{i}")
+                       suffix=f"{suffix}_block{i}")
+        i+= 1
+        x = block(x, filters, strides=stride1, activation=self.activation, 
+                       expansion=self.expansion, dp_rate=dp_rate, make_model=False,
+                       suffix=f"{suffix}_block{i}")
         return x
 
     def preprocess_input(self):
@@ -68,8 +68,8 @@ def RESNEXT():
 
 
 def Resnet18(inputs=None,
-             input_shape=(224,224, 3),
-             num_classes=1024,
+             input_shape=(3,224,224),
+             num_classes=1000,
              dp_rate=0,
              activation=tf.nn.relu):
 
@@ -77,8 +77,8 @@ def Resnet18(inputs=None,
                   dp_rate=dp_rate, activation=activation)
 
 def Resnet34(inputs=None,
-             input_shape=(224,224, 3),
-             num_classes=1024,
+             input_shape=(3,224,224),
+             num_classes=1000,
              dp_rate=0,
              activation=tf.nn.relu):
 
@@ -86,8 +86,8 @@ def Resnet34(inputs=None,
                   dp_rate=dp_rate, activation=activation)
 
 def Resnet50(inputs=None,
-             input_shape=(224,224, 3),
-             num_classes=1024,
+             input_shape=(3,224,224),
+             num_classes=1000,
              dp_rate=0,
              activation=tf.nn.relu):
 
@@ -95,8 +95,8 @@ def Resnet50(inputs=None,
                   dp_rate=dp_rate, activation=activation)
 
 def Resnet101(inputs=None,
-             input_shape=(224,224, 3),
-             num_classes=1024,
+             input_shape=(3,224,224),
+             num_classes=1000,
              dp_rate=0,
              activation=tf.nn.relu):
 
