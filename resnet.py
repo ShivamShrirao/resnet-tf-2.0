@@ -8,11 +8,13 @@ from resblock import norm_act, conv_norm, BasicBlock, Bottleneck
 
 class Resnet():
     def __init__(self, block, filters_per_stack=[64, 128, 256, 512], num_repeats=[3,4,6,3], strides=[1,2,2,2],
-                 dp_rate=0, activation=tf.nn.relu, inputs=None, input_shape=(224, 224, 3), num_classes=1024):
+                 expansion=4, dp_rate=0, activation=tf.nn.relu, inputs=None, input_shape=(224, 224, 3),
+                 num_classes=1024):
         self.block = block
         self.dp_rate = dp_rate
         self.activation = activation
         self.num_classes = num_classes
+        self.expansion = expansion
         self.input_shape = input_shape
         if inputs is None:
             self.inputs = layers.Input(shape=input_shape)
@@ -23,15 +25,18 @@ class Resnet():
         self.filters_per_stack = filters_per_stack
         self.num_repeats = num_repeats
         self.strides = strides
-        self.build_model()
+        o = self.build_model()
+        model = tf.keras.Model(inputs=self.inputs, outputs=o)
 
     def build_model(self, include_top=True):
         x = self.inputs
+        # stem
         x = conv_norm(x, 64, kernel_size=7, strides=2, activation=self.activation, do_norm_act=False)
         x = layers.MaxPooling2D(3, strides=2)(x)
 
-        for i in range(len(filters_per_stack)):
-            x = stack(x, self.block, self.filters_per_stack[i], self.strides[i], repeat=self.num_repeats[i],
+        # body
+        for i in range(len(self.filters_per_stack)):
+            x = self.stack(x, self.block, self.filters_per_stack[i], self.strides[i], repeat=self.num_repeats[i],
                       dp_rate=self.dp_rate)
 
         x = norm_act(x)
@@ -41,6 +46,7 @@ class Resnet():
             x = layers.GlobalAveragePooling2D()(x)
             x = layers.Dense(self.num_classes)(x)
             x = layers.Softmax(axis=-1)(x)
+            return x
 
     def stack(self, x, block, filters, stride1=2, dp_rate=0, repeat=3, suffix=1):
         i = 0
@@ -54,7 +60,11 @@ class Resnet():
         return x
 
     def preprocess_input(self):
-        pass
+        raise NotImplementedError
+
+
+def RESNEXT():
+    raise NotImplementedError
 
 
 def Resnet18(inputs=None,
