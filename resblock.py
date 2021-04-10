@@ -1,8 +1,6 @@
 import tensorflow as tf
 import tensorflow.keras.layers as layers
 
-from attention import SqueezeAttention2D, MultiHeadAttention2D
-
 def norm_act(x, activation=tf.nn.relu):
     x = layers.BatchNormalization(axis=1)(x)
 

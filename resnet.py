@@ -1,7 +1,7 @@
 import tensorflow as tf
 import tensorflow.keras.layers as layers
 
-from resblock import norm_act, conv_norm, BasicBlock, Bottleneck, AttnBottleneck
+from resblock import norm_act, conv_norm, BasicBlock, Bottleneck
 
 # https://github.com/tensorflow/tensorflow/blob/v2.4.1/tensorflow/python/keras/applications/resnet.py
 
